@@ -21,6 +21,7 @@ import threading
 import signal
 import sys
 import cv2
+import av
 import json
 
 
@@ -29,7 +30,7 @@ running = True
 # Global gaze position to indicate the point of gaze on the video.
 # This is necessary because the async-ness that the socket has.
 gp = [0, 0]
-
+ts = 0
 
 GLASSES_IP = "192.168.0.102" # IPv4 address
 PORT = 49152
@@ -69,7 +70,7 @@ def receive_in_background(data_socket):
     Method to recieve the gaze position data in the background and update the gp variable.
     @param data_socket is the socket to receive data from.
     '''
-    global running, gp
+    global running, gp, ts
     while running:
         data, address = data_socket.recvfrom(1024)
         #print (data)
@@ -80,7 +81,12 @@ def receive_in_background(data_socket):
             elif 'gp' in dec_data:
                 ob = json.loads(data.decode("utf-8", "replace"))
                 gp = ob['gp']
+                ts = ob['ts']
                 print(ob['ts'])
+            elif 'dir' in dec_data:
+                ob = json.loads(data.decode("utf-8", "replace"))
+                sync_ts = ob['ts']
+                sync_sig = ob['sig'] # 1 if active, 0 if not
 
 
 if __name__ == "__main__":
@@ -105,24 +111,35 @@ if __name__ == "__main__":
 
     # Create a video capture device from the rtsp server running on the
     # recording unit. Only works with IPv4.
-    cap = cv2.VideoCapture("rtsp://%s:8554/live/scene" % GLASSES_IP)
-    # Reduces the amount of h264 decoding errors (only in OpenCV3+)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
-    font = cv2.FONT_HERSHEY_DUPLEX
+    # cap = cv2.VideoCapture("rtsp://%s:8554/live/scene" % GLASSES_IP)
+    # # Reduces the amount of h264 decoding errors (only in OpenCV3+)
+    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
+    # font = cv2.FONT_HERSHEY_DUPLEX
 
-    while running:
+    container = av.open("rtsp://%s:8554/live/scene" % GLASSES_IP, options={'rtsp_transport': 'tcp'})
+    stream = container.streams.video[0]
+
+    for frame in container.decode(stream):
         # Read live data
-        ret, frame = cap.read()
+        frame_cv = frame.to_ndarray(format='bgr24')
 
-        if not ret:
+        # if data_gp['ts'] > 0 and data_pts['ts'] > 0:
+        #     offset = data_gp['ts'] / 1000.0 - data_pts['ts'] / 1000.0  # in milliseconds
+        #     print('Frame_pts = %f' % float(frame.pts))
+        #     print('Frame_time = %f' % float(frame.time))
+        #     print('Data_pts = %f' % float(data_pts['pts']))
+        #     print('Offset = %f' % float(offset))
+
+
+        if not frame_cv:
             print("no return frame")
 
         # Place an 'O' on the video where the gaze position is currently at.
         # Video is at a 1920x1080 resolution. The point is a normalized vector in 2D
         # with the origin in the upper-left corner, just like opencv frames
         # We can just multiply the point by the dimensions to get the location
-        cv2.putText(frame, 'O', (int(gp[0] * 1920), int(gp[1] * 1080)),
-                    font, 1, (0, 0, 255), 2)
+        height, width = frame_cv.shape[:2]
+        cv2.circle(frame_cv, (int(gp['gp'][0] * width), int(gp['gp'][1] * height)), 20, (0, 0, 255), 6)
 
         cv2.imshow('video', frame)
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 
 '''
 ROS module for Tobii Pro Glasses
@@ -24,7 +26,7 @@ import sys
 import json
 import rospy
 import argparse
-import tobii
+# import tobii
 import os
 from subprocess import call
 from publisher import *
@@ -37,8 +39,8 @@ GYROSCOPE = "gy"
 timeout = 1.0
 running = True
 
-#GLASSES_IP = "fe80::76fe:48ff:fe30:7a9f" # IPv6 address scope global 192.168.71.50
-GLASSES_IP = "192.168.71.50"
+# GLASSES_IP = "fe80::76fe:48ff:fe30:7a9f"  # IPv6 address scope global 192.168.71.50
+GLASSES_IP = "192.168.0.102"#"192.168.71.50"
 PORT = 49152
 
 

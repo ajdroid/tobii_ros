@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import json
 import rospy
 import time
-from gaze.msg import Gp3, Gp, Ac, Gy, Gaze
+from gaze.msg import Gaze#Gp3, Gp, Ac, Gy, Gaze
 
 '''
 ROS module for Tobii Pro Glasses
@@ -24,27 +26,29 @@ DM17-0454
 A dictionary mapping strings to imported objects. This is used
 when creating a publisher. We need to pass the import (not as a function call??).
 '''
-imports = {
-    "gp3" : Gp3,
-    "gp" : Gp,
-    "ac" : Ac,
-    "gy" : Gy,
-    "gaze" : Gaze
-}
+# imports = {
+#     "gp3" : Gp3,
+#     "gp" : Gp,
+#     "ac" : Ac,
+#     "gy" : Gy,
+#     "gaze" : Gaze
+# }
 
-'''
-A dictionary mapping strings to imported object's __init__.
-This is used when we create a message to publish.
-I'm not sure this is totally necessary, but my knowledge of python
-isn't advanced enough to not use this.
-'''
-msg_types = {
-    "gp3" : Gp3(),
-    "gp" : Gp(),
-    "ac" : Ac(),
-    "gy" : Gy(),
-    "gaze" : Gaze()
-}
+imports = ["gp3", "gp", "ac", "gy", "gaze"]
+
+# '''
+# A dictionary mapping strings to imported object's __init__.
+# This is used when we create a message to publish.
+# I'm not sure this is totally necessary, but my knowledge of python
+# isn't advanced enough to not use this.
+# '''
+# msg_types = {
+#     "gp3" : Gp3(),
+#     "gp" : Gp(),
+#     "ac" : Ac(),
+#     "gy" : Gy(),
+#     "gaze" : Gaze()
+# }
 
 class InvalidTopicException(Exception):
     pass
@@ -80,7 +84,7 @@ class Publisher():
     '''
     def __init__(self, topic):
         self._topic = topic
-        if not imports[topic]:
+        if not topic in imports:
             raise InvalidTopicException("Undefined topic.")
         print("Creating publisher for gaze" + topic + " topic")
         self._pub = rospy.Publisher("gaze" + topic, Gaze, queue_size=10, tcp_nodelay=True)
@@ -102,7 +106,7 @@ class Publisher():
             for k, v in self._data.iteritems():
                 if k == "ts":
                     msg.ts = v
-                if k in imports.keys():
+                if k in imports:
                     msg.vector = v
             print(msg)
             rospy.loginfo(msg)
