@@ -90,6 +90,8 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    Fa.msg
    Gaze.msg
+   Pts.msg
+   Syncsig.msg
  )
 
 ## Generate services in the 'srv' folder

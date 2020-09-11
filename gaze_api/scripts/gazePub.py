@@ -35,12 +35,14 @@ GAZE_POSITION_3D = "gp3"
 GAZE_POSITION_2D = "gp"
 ACCELEROMETER = "ac"
 GYROSCOPE = "gy"
+VIDEO_PTS = "pts"  # pts/vts sync package
+SYNC_SIG = "sig"
 
 timeout = 1.0
 running = True
 
 # GLASSES_IP = "fe80::76fe:48ff:fe30:7a9f"  # IPv6 address scope global 192.168.71.50
-GLASSES_IP = "192.168.0.102"#"192.168.71.50"
+GLASSES_IP = "192.168.0.102" #"192.168.71.50"
 PORT = 49152
 
 
@@ -63,6 +65,7 @@ def send_keepalive_msg(socket, msg, peer):
         socket.sendto(str.encode(msg), peer)
         time.sleep(timeout)
 
+
 def signal_handler(signal, frame):
     stop_sending_msg()
     sys.exit(0)
@@ -80,6 +83,7 @@ if __name__ == '__main__':
         parser.add_argument('--gp', action="store_true", help="Option to publish gaze position (2D) data")
         parser.add_argument('--gy', action="store_true", help="Option to publish gyroscope data")
         parser.add_argument('--ac', action="store_true", help="Option to publish accelerometer data")
+        parser.add_argument('--sig', action="store_true", help="Option to publish sync signal recvd bit")
         parser.add_argument('--lo', action="store_true", help="Testing param to set the IP to localhost")
 
         args = parser.parse_args(rospy.myargv()[1:])
@@ -91,7 +95,7 @@ if __name__ == '__main__':
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
         # Allow to connect to local host for testing
-        if(args.lo):
+        if args.lo:
             print("Enabling local host connection")
             peer = ("localhost", PORT)
         else:
@@ -99,7 +103,7 @@ if __name__ == '__main__':
 
         # Create socket which will send a keep alive message for the live data stream
         data_socket = mksock(peer)
-        if(args.lo):
+        if args.lo:
             print("binding...")
             data_socket.bind(peer)
 
@@ -123,16 +127,16 @@ if __name__ == '__main__':
         pub_factory = Publisher_Factory()
         # Default publish the 3D gaze position data
         gp3pub = pub_factory.make_Publisher(GAZE_POSITION_3D)
-        gppub = None
+        sigpub = pub_factory.make_Publisher(SYNC_SIG)
+        ptspub = pub_factory.make_Publisher(VIDEO_PTS)
+        gppub = pub_factory.make_Publisher(GAZE_POSITION_2D)
         gypub = None
         acpub = None
 
-        # Create a publisher for each topic parameter chosen
-        if(args.gp):
-            gppub = pub_factory.make_Publisher(GAZE_POSITION_2D)
-        if(args.gy):
+        # Create a publisher for optional topics
+        if args.gy:
             gypub = pub_factory.make_Publisher(GYROSCOPE)
-        if(args.ac):
+        if args.ac:
             acpub = pub_factory.make_Publisher(ACCELEROMETER)
 
         '''
@@ -143,6 +147,12 @@ if __name__ == '__main__':
             data, address = data_socket.recvfrom(1024)
 
             dec_data = data.decode("utf-8", "replace")
+            if VIDEO_PTS in dec_data and acpub:
+                ptspub.publish(data)
+            if SYNC_SIG in dec_data and acpub:
+                sigpub.publish(data)
+            if ACCELEROMETER in dec_data and acpub:
+                acpub.publish(data)
             if GAZE_POSITION_3D in dec_data and gp3pub:
                 gp3pub.publish(data)
             if GAZE_POSITION_2D in dec_data and gppub:
@@ -151,7 +161,6 @@ if __name__ == '__main__':
                 gypub.publish(data)
             if ACCELEROMETER in dec_data and acpub:
                 acpub.publish(data)
-
 
     except (rospy.ROSInterruptException, KeyboardInterrupt, SystemExit):
         stop_sending_msg()

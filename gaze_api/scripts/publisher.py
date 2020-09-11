@@ -4,7 +4,7 @@ import sys
 import json
 import rospy
 import time
-from gaze.msg import Gaze#Gp3, Gp, Ac, Gy, Gaze
+from gaze.msg import Gaze, Pts, Syncsig#Gp3, Gp, Ac, Gy, Gaze
 
 '''
 ROS module for Tobii Pro Glasses
@@ -34,7 +34,11 @@ when creating a publisher. We need to pass the import (not as a function call??)
 #     "gaze" : Gaze
 # }
 
-imports = ["gp3", "gp", "ac", "gy", "gaze"]
+
+gaze_topics = ["gp3", "gp", "ac", "gy", "gaze"]
+sync_topics = ["pts", "sig"]
+
+topics = gaze_topics + sync_topics
 
 # '''
 # A dictionary mapping strings to imported object's __init__.
@@ -56,7 +60,7 @@ class InvalidTopicException(Exception):
 '''
 A pseudo-factory to create each publisher on the same node.
 '''
-class Publisher_Factory():
+class Publisher_Factory:
     def __init__(self):
         rospy.init_node("gazePublisher", anonymous=True)
 
@@ -71,44 +75,86 @@ We create a specific publisher for each topic.
 @Method publish : Takes the raw JSON data from the glasses and
 creates a msg object based on the attributes.
 '''
-class Publisher():
+class Publisher:
     _topic = None
     _data = None
     _pub = None
     _rate = None
 
     '''
-    Init to create a publisher on a specific tpoic following the "gaze + [TOPIC]"
+    Init to create a publisher on a specific topic following the "tobii + [TOPIC]"
     convention. This is so that ROS packages can choose which topic to consume.
     We also defined it with the specific message packet that corresponds to the topic.
     '''
-    def __init__(self, topic):
+    def __init__(self, topic, ):
         self._topic = topic
-        if not topic in imports:
+        if not topic in topics:
             raise InvalidTopicException("Undefined topic.")
+        elif topic in gaze_topics:
+            self.publish = self.gaze_publish
+            self._pub = rospy.Publisher("tobiigaze" + topic, Gaze, queue_size=10, tcp_nodelay=True)
+        elif topic is "sig":
+            self.publish = self.syncsig_publish
+            self._pub = rospy.Publisher("tobii" + topic, Syncsig, queue_size=10, tcp_nodelay=True)
+        elif topic is "pts":
+            self.publish = self.pts_publish
+            self._pub = rospy.Publisher("tobii" + topic, Pts, queue_size=10, tcp_nodelay=True)
         print("Creating publisher for gaze" + topic + " topic")
-        self._pub = rospy.Publisher("gaze" + topic, Gaze, queue_size=10, tcp_nodelay=True)
+
         self._rate = rospy.Rate(10)
 
     '''
-    Method to publish data to a specific publisher.
-    This method expects data to be encoded JSON.
+    Methods to publish data to a specific publisher, expects data to be encoded JSON.
     After decoding, we match the JSON object's properties to the message properties.
     If the 's' property is 1, the packet is invalid (for multiple possible reasons)
-    and we exclude it.
     '''
-    def publish(self, data):
-        self._data = json.loads(data.decode("utf-8", "replace"))
-        keys = self._data.keys()
 
-        if self._data["s"] == 1 or self._data["s"] == 0:
+
+    def gaze_publish(self, data):
+        self._data = json.loads(data.decode("utf-8", "replace"))
+
+        if self._data["s"] == 0:
             msg = Gaze()
             for k, v in self._data.iteritems():
                 if k == "ts":
                     msg.ts = v
-                if k in imports:
+                if k in gaze_topics:
                     msg.vector = v
             print(msg)
             rospy.loginfo(msg)
             self._pub.publish(msg)
             self._rate.sleep()
+        elif self._data["s"] == 1:
+            print(self._data)
+        return
+
+    def pts_publish(self, data):
+        self._data = json.loads(data.decode("utf-8", "replace"))
+
+        if self._data["s"] == 1 or self._data["s"] == 0:
+            msg = Pts()
+            msg.ts = self._data["ts"]
+            msg.pts = self._data["pts"]
+            msg.pv = self._data["pv"]
+
+            print(msg)
+            rospy.loginfo(msg)
+            self._pub.publish(msg)
+            self._rate.sleep()
+        return
+
+    def syncsig_publish(self, data):
+        self._data = json.loads(data.decode("utf-8", "replace"))
+
+        if self._data["s"] == 1 or self._data["s"] == 0:
+            msg = Pts()
+            msg.ts = self._data["ts"]
+            msg.dir = self._data["dir"]
+            msg.sig = self._data["sig"]
+
+            print(msg)
+            rospy.loginfo(msg)
+            self._pub.publish(msg)
+            self._rate.sleep()
+        return
+

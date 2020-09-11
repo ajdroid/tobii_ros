@@ -28,11 +28,11 @@ import json
 timeout = 1.0
 running = True
 # Global gaze position to indicate the point of gaze on the video.
-# This is necessary because the async-ness that the socket has.
 gp = [0, 0]
+# This is necessary because the async-ness that the socket has.
 ts = 0
 
-GLASSES_IP = "192.168.0.102" # IPv4 address
+GLASSES_IP = "192.168.0.102"  # IPv4 address
 PORT = 49152
 
 
@@ -129,7 +129,6 @@ if __name__ == "__main__":
         #     print('Frame_time = %f' % float(frame.time))
         #     print('Data_pts = %f' % float(data_pts['pts']))
         #     print('Offset = %f' % float(offset))
-
 
         if not frame_cv:
             print("no return frame")
