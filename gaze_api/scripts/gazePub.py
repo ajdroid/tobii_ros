@@ -112,9 +112,10 @@ if __name__ == '__main__':
 
         # Create socket which will send a keep alive message for the live video stream
         # Need both keep alive messages in order to receive any data at all
-        video_socket = mksock(peer)
-        tv = threading.Timer(0, send_keepalive_msg, [video_socket, KA_VIDEO_MSG, peer])
-        tv.start()
+        print("no video KA")
+        # video_socket = mksock(peer)
+        # tv = threading.Timer(0, send_keepalive_msg, [video_socket, KA_VIDEO_MSG, peer])
+        # tv.start()
 
         '''
         End thread initiation.
@@ -147,12 +148,11 @@ if __name__ == '__main__':
             data, address = data_socket.recvfrom(1024)
 
             dec_data = data.decode("utf-8", "replace")
-            if VIDEO_PTS in dec_data and acpub:
+            # print(dec_data)
+            if VIDEO_PTS in dec_data and ptspub:
                 ptspub.publish(data)
-            if SYNC_SIG in dec_data and acpub:
+            if SYNC_SIG in dec_data and sigpub:
                 sigpub.publish(data)
-            if ACCELEROMETER in dec_data and acpub:
-                acpub.publish(data)
             if GAZE_POSITION_3D in dec_data and gp3pub:
                 gp3pub.publish(data)
             if GAZE_POSITION_2D in dec_data and gppub:

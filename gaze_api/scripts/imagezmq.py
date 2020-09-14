@@ -1,4 +1,4 @@
-""" imagezmq: Transport OpenCV images via ZMQ.
+""" imagezmq_backup: Transport OpenCV images via ZMQ.
 
 Classes that transport OpenCV images from one computer to another. For example,
 OpenCV images gathered by a Raspberry Pi camera could be sent to another
@@ -13,14 +13,14 @@ import zmq
 import numpy as np
 
 class ImageSender():
-    """Opens a zmq socket and sends images
+    """Opens a zmq time_socket and sends images
 
-    Opens a zmq (REQ or PUB) socket on the image sending computer, often a
+    Opens a zmq (REQ or PUB) time_socket on the image sending computer, often a
     Raspberry Pi, that will be sending OpenCV images and
     related text messages to the hub computer. Provides methods to
     send images or send jpg compressed images.
 
-    Two kinds of ZMQ message patterns are possible in imagezmq:
+    Two kinds of ZMQ message patterns are possible in imagezmq_backup:
     REQ/REP: an image is sent and the sender waits for a reply ("blocking").
     PUB/SUB: an images is sent and no reply is sent or expected ("non-blocking").
 
@@ -30,32 +30,32 @@ class ImageSender():
 
     Arguments:
       connect_to: the tcp address:port of the hub computer.
-      REQ_REP: (optional) if True (the default), a REQ socket will be created
-                          if False, a PUB socket will be created
+      REQ_REP: (optional) if True (the default), a REQ time_socket will be created
+                          if False, a PUB time_socket will be created
     """
 
     def __init__(self, connect_to='tcp://127.0.0.1:5555', REQ_REP = True):
-        """Initializes zmq socket for sending images to the hub.
+        """Initializes zmq time_socket for sending images to the hub.
 
-        Expects an appropriate ZMQ socket at the connect_to tcp:port address:
-        If REQ_REP is True (the default), then a REQ socket is created. It
-        must connect to a matching REP socket on the ImageHub().
+        Expects an appropriate ZMQ time_socket at the connect_to tcp:port address:
+        If REQ_REP is True (the default), then a REQ time_socket is created. It
+        must connect to a matching REP time_socket on the ImageHub().
 
-        If REQ_REP = False, then a PUB socket is created. It must connect to
-        a matching SUB socket on the ImageHub().
+        If REQ_REP = False, then a PUB time_socket is created. It must connect to
+        a matching SUB time_socket on the ImageHub().
         """
 
         if REQ_REP == True:
-            # REQ/REP mode, this is a blocking scenario
-            self.init_reqrep(connect_to)
+             # REQ/REP mode, this is a blocking scenario
+             self.init_reqrep(connect_to)
         else:
-            # PUB/SUB mode, non-blocking scenario
-            self.init_pubsub(connect_to)
+             #PUB/SUB mode, non-blocking scenario
+             self.init_pubsub(connect_to)
 
     def init_reqrep(self, address):
+        """ Creates and inits a time_socket in REQ/REP mode
         """
-        Creates and inits a socket in REQ/REP mode
-        """
+
         socketType = zmq.REQ
         self.zmq_context = SerializingContext()
         self.zmq_socket = self.zmq_context.socket(socketType)
@@ -66,8 +66,7 @@ class ImageSender():
         self.send_jpg   = self.send_jpg_reqrep
 
     def init_pubsub(self, address):
-        """
-        Creates and inits a socket in PUB/SUB mode
+        """Creates and inits a time_socket in PUB/SUB mode
         """
 
         socketType = zmq.PUB
@@ -116,7 +115,7 @@ class ImageSender():
 
     def send_image_pubsub(self, msg, image):
         """Sends OpenCV image and msg hub computer in PUB/SUB mode. If
-        there is no hub computer subscribed to this socket, then image and msg
+        there is no hub computer subscribed to this time_socket, then image and msg
         are discarded.
 
         Arguments:
@@ -165,7 +164,7 @@ class ImageSender():
 
     def send_jpg_pubsub(self, msg, jpg_buffer):
         """Sends msg text and jpg buffer to hub computer in PUB/SUB mode. If
-        there is no hub computer subscribed to this socket, then image and msg
+        there is no hub computer subscribed to this time_socket, then image and msg
         are discarded.
 
         Arguments:
@@ -179,7 +178,7 @@ class ImageSender():
         self.zmq_socket.send_jpg(msg, jpg_buffer, copy=False)
 
     def close(self):
-        """Closes the ZMQ socket and the ZMQ context.
+        """Closes the ZMQ time_socket and the ZMQ context.
         """
 
         self.zmq_socket.close()
@@ -202,14 +201,14 @@ class ImageSender():
 
 
 class ImageHub():
-    """Opens a zmq socket and receives images
+    """Opens a zmq time_socket and receives images
 
-    Opens a zmq (REP or SUB) socket on the hub computer, for example,
+    Opens a zmq (REP or SUB) time_socket on the hub computer, for example,
     a Mac, that will be receiving and displaying or processing OpenCV images
     and related text messages. Provides methods to receive images or receive
     jpg compressed images.
 
-    Two kinds of ZMQ message patterns are possible in imagezmq:
+    Two kinds of ZMQ message patterns are possible in imagezmq_backup:
     REQ/REP: an image is sent and the sender waits for a reply ("blocking").
     PUB/SUB: an images is sent and no reply is sent or expected ("non-blocking").
 
@@ -218,29 +217,29 @@ class ImageHub():
     The default is REQ/REP for the ImageSender class and the ImageHub class.
 
     Arguments:
-      open_port: (optional) the socket to open for receiving REQ requests or
-                 socket to connect to for SUB requests.
-      REQ_REP: (optional) if True (the default), a REP socket will be created
-                          if False, a SUB socket will be created
+      open_port: (optional) the time_socket to open for receiving REQ requests or
+                 time_socket to connect to for SUB requests.
+      REQ_REP: (optional) if True (the default), a REP time_socket will be created
+                          if False, a SUB time_socket will be created
     """
 
     def __init__(self, open_port='tcp://*:5555', REQ_REP = True):
-        """Initializes zmq socket to receive images and text.
+        """Initializes zmq time_socket to receive images and text.
 
-        Expects an appropriate ZMQ socket at the senders tcp:port address:
-        If REQ_REP is True (the default), then a REP socket is created. It
-        must connect to a matching REQ socket on the ImageSender().
+        Expects an appropriate ZMQ time_socket at the senders tcp:port address:
+        If REQ_REP is True (the default), then a REP time_socket is created. It
+        must connect to a matching REQ time_socket on the ImageSender().
 
-        If REQ_REP = False, then a SUB socket is created. It must connect to
-        a matching PUB socket on the ImageSender().
+        If REQ_REP = False, then a SUB time_socket is created. It must connect to
+        a matching PUB time_socket on the ImageSender().
 
         """
         self.REQ_REP = REQ_REP
         if REQ_REP ==True:
-            #Init REP socket for blocking mode
+            #Init REP time_socket for blocking mode
             self.init_reqrep(open_port)
         else:
-            #Connect to PUB socket for non-blocking mode
+            #Connect to PUB time_socket for non-blocking mode
             self.init_pubsub(open_port)
 
     def init_reqrep(self, address):
@@ -266,7 +265,7 @@ class ImageHub():
         Use this method to connect (and subscribe) to additional senders.
 
         Arguments:
-             open_port: the PUB socket to connect to.
+             open_port: the PUB time_socket to connect to.
         """
 
         if self.REQ_REP == False:
@@ -312,7 +311,7 @@ class ImageHub():
         self.zmq_socket.send(reply_message)
 
     def close(self):
-        """Closes the ZMQ socket and the ZMQ context.
+        """Closes the ZMQ time_socket and the ZMQ context.
         """
 
         self.zmq_socket.close()
@@ -390,7 +389,8 @@ class SerializingSocket(zmq.Socket):
         return self.send(jpg_buffer, flags, copy=copy, track=track)
 
     def recv_array(self, flags=0, copy=True, track=False):
-        """Receives a numpy array with metadata and text message.
+        """
+        Receives a numpy array with metadata and text message.
 
         Receives a numpy array with the metadata necessary
         for reconstructing the array (dtype,shape).
@@ -408,6 +408,8 @@ class SerializingSocket(zmq.Socket):
 
         md = self.recv_json(flags=flags)
         msg = self.recv(flags=flags, copy=copy, track=track)
+        # buf = memoryview(msg)
+        # A = np.frombuffer(buf, dtype=md['dtype'])
         A = np.frombuffer(msg, dtype=md['dtype'])
         return (md['msg'], A.reshape(md['shape']))
 

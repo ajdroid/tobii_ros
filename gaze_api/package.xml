@@ -33,7 +33,7 @@ DM17-0454
   <build_depend>rostest</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
-  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
   <run_depend>message_runtime</run_depend>
   <test_depend>rosunit</test_depend>
 

@@ -4,7 +4,7 @@ import sys
 import json
 import rospy
 import time
-from gaze.msg import Gaze, Pts, Syncsig#Gp3, Gp, Ac, Gy, Gaze
+from gaze.msg import Gaze, Fa, Pts, Syncsig #Gp3, Gp, Ac, Gy, Gaze
 
 '''
 ROS module for Tobii Pro Glasses
@@ -40,12 +40,6 @@ sync_topics = ["pts", "sig"]
 
 topics = gaze_topics + sync_topics
 
-# '''
-# A dictionary mapping strings to imported object's __init__.
-# This is used when we create a message to publish.
-# I'm not sure this is totally necessary, but my knowledge of python
-# isn't advanced enough to not use this.
-# '''
 # msg_types = {
 #     "gp3" : Gp3(),
 #     "gp" : Gp(),
@@ -66,6 +60,7 @@ class Publisher_Factory:
 
     def make_Publisher(self, topic):
         return Publisher(topic)
+
 
 '''
 A publisher class. Used to create a publisher for each topic we want to publish.
@@ -101,14 +96,13 @@ class Publisher:
             self._pub = rospy.Publisher("tobii" + topic, Pts, queue_size=10, tcp_nodelay=True)
         print("Creating publisher for gaze" + topic + " topic")
 
-        self._rate = rospy.Rate(10)
+        self._rate = rospy.Rate(100)
 
     '''
     Methods to publish data to a specific publisher, expects data to be encoded JSON.
     After decoding, we match the JSON object's properties to the message properties.
     If the 's' property is 1, the packet is invalid (for multiple possible reasons)
     '''
-
 
     def gaze_publish(self, data):
         self._data = json.loads(data.decode("utf-8", "replace"))
@@ -120,12 +114,13 @@ class Publisher:
                     msg.ts = v
                 if k in gaze_topics:
                     msg.vector = v
-            print(msg)
+            # print(msg)
             rospy.loginfo(msg)
             self._pub.publish(msg)
-            self._rate.sleep()
+            # self._rate.sleep()
         elif self._data["s"] == 1:
-            print(self._data)
+            pass
+            # print(self._data)
         return
 
     def pts_publish(self, data):
@@ -137,10 +132,10 @@ class Publisher:
             msg.pts = self._data["pts"]
             msg.pv = self._data["pv"]
 
-            print(msg)
+            # print(msg)
             rospy.loginfo(msg)
             self._pub.publish(msg)
-            self._rate.sleep()
+            # self._rate.sleep()
         return
 
     def syncsig_publish(self, data):
@@ -152,9 +147,9 @@ class Publisher:
             msg.dir = self._data["dir"]
             msg.sig = self._data["sig"]
 
-            print(msg)
+            # print(msg)
             rospy.loginfo(msg)
             self._pub.publish(msg)
-            self._rate.sleep()
+            # self._rate.sleep()
         return
 
