@@ -90,10 +90,10 @@ class Publisher:
             self._pub = rospy.Publisher("tobiigaze" + topic, Gaze, queue_size=10, tcp_nodelay=True)
         elif topic is "sig":
             self.publish = self.syncsig_publish
-            self._pub = rospy.Publisher("tobii" + topic, Syncsig, queue_size=10, tcp_nodelay=True)
+            self._pub = rospy.Publisher("tobii_sig_sync", Syncsig, queue_size=10, tcp_nodelay=True)
         elif topic is "pts":
             self.publish = self.pts_publish
-            self._pub = rospy.Publisher("tobii" + topic, Pts, queue_size=10, tcp_nodelay=True)
+            self._pub = rospy.Publisher("tobii_pts_sync", Pts, queue_size=10, tcp_nodelay=True)
         print("Creating publisher for gaze" + topic + " topic")
 
         self._rate = rospy.Rate(100)

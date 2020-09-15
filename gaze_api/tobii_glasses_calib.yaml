@@ -1,0 +1,26 @@
+% [k1, p1, p2, k2, k3]
+image_width: 1920.0
+image_height: 1080.0
+camera_name: tobiiglasses_world
+
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.109722, -0.000415268, -2.60221E-05,  -0.382931, 0.371597]
+  
+intrinsics_matrix:
+  rows: 3
+  cols: 3
+  data: [ 1139.83, 0., 940.846, 0., 1140.3, 525.317, 0., 0., 1.]
+
+rotation: 
+   rows: 3
+   cols: 3
+   data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]
+
+% [R|t]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [ 0.99939104, -0.03447734, -0.00537255, 0, 0.0231636,  0.54037237,  0.8411071, 0, -0.02609596, -0.84071934,  0.54084193, 0]

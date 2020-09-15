@@ -4,22 +4,18 @@
 import time
 import socket
 import threading
-import signal
-import sys
-import json
 import rospy
-import argparse
-import os
-from subprocess import call
 from publisher import *
-import traceback
 import cv2
 import imagezmq
 import numpy as np
-from time import sleep
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
 from cv_bridge import CvBridge, CvBridgeError
+
+def parse_sent_msg(msg):
+    ctr, frame_time = msg.split()
+    frame_time = float(frame_time)
+    return frame_time, ctr
 
 # setup socket to python3 video streamer
 
@@ -73,11 +69,10 @@ if __name__ == '__main__':
         receiver = VideoStreamSubscriber(hostname, imgzmq_port)
 
         '''
-        Create publishers
+        Create publisher
         '''
         # Default publish the 3D gaze position data
         vidpub = rospy.Publisher("tobii_video", Image, queue_size=10)
-        vid_timestamp_pub = rospy.Publisher("tobii_pts", String, queue_size=10)
         bridge = CvBridge()
 
         rospy.init_node('tobii_image_sender', anonymous=True)
@@ -87,10 +82,14 @@ if __name__ == '__main__':
             sent_msg_string, frame = receiver.receive()
             image = cv2.imdecode(np.frombuffer(frame, dtype='uint8'), -1)
             print(image.shape, sent_msg_string)
+            # Parse sent message to convert to ros formats
+            frametime, counter = parse_sent_msg(sent_msg_string)
 
             # publish to ROS
-            vidpub.publish(bridge.cv2_to_imgmsg(image, "bgr8"))
-            vid_timestamp_pub.publish(sent_msg_string)
+            im_ros = bridge.cv2_to_imgmsg(image, "bgr8")
+            im_ros.header.stamp = rospy.Time.from_sec(frametime)
+            im_ros.header.frame_id = str(counter)
+            vidpub.publish(im_ros)
 
     except (rospy.ROSInterruptException, KeyboardInterrupt, SystemExit):
         sys.exit(0)

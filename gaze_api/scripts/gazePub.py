@@ -126,11 +126,12 @@ if __name__ == '__main__':
         specific topic
         '''
         pub_factory = Publisher_Factory()
-        # Default publish the 3D gaze position data
+
+        gppub = pub_factory.make_Publisher(GAZE_POSITION_2D)
         gp3pub = pub_factory.make_Publisher(GAZE_POSITION_3D)
         sigpub = pub_factory.make_Publisher(SYNC_SIG)
         ptspub = pub_factory.make_Publisher(VIDEO_PTS)
-        gppub = pub_factory.make_Publisher(GAZE_POSITION_2D)
+
         gypub = None
         acpub = None
 

@@ -14,8 +14,6 @@ D.  	You agree that You have no right to use any of Tobii's trade names, tradema
 DM17-0454
 -->
 <launch>
-  <test test-name="testGlassesIPPortAndKeepAlive" time-limit="320.0" pkg="gaze" type="testGlassesIPPortAndKeepAlive.test" />
-  <test test-name="testVideoStreamData" time-limit="320.0" pkg="gaze" type="testVideoStreamData.test" />
-  <node name="gazePub" pkg="gaze" type="gazePub.py" args="--lo --gp --ac --gy"/>
-  <test test-name="testAllResponses" time-limit="320.0" pkg="gaze" type="testAllResponses.test" />
+  <node name="gazePub" pkg="gaze" type="gazePub.py" args="--gp --ac --gy"/>
+  <node name="vidPub" pkg="gaze" type="vidPub.py" args=""/>
 </launch>
