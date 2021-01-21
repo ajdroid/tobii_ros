@@ -25,6 +25,11 @@ class VideoStreamSubscriber:
     def __init__(self, hostname, port):
         self.hostname = hostname
         self.port = port
+        if port == 0:  # ipc operation rather than tcp
+            self.receiver_address = "ipc://{}".format(self.hostname)
+        else:
+            self.receiver_address = "tcp://{}:{}".format(self.hostname, self.port)
+
         self._stop = False
         self._data_ready = threading.Event()
         self._thread = threading.Thread(target=self._run, args=())
@@ -40,7 +45,8 @@ class VideoStreamSubscriber:
         return self._data
 
     def _run(self):
-        receiver = imagezmq.ImageHub("tcp://{}:{}".format(self.hostname, self.port), REQ_REP=False)
+        receiver = imagezmq.ImageHub(self.receiver_address, REQ_REP=False)
+
         while not self._stop:
             self._data = receiver.recv_jpg()
             # self._data = receiver.recv_image()
@@ -66,6 +72,7 @@ if __name__ == '__main__':
         Initiate the Video Stream Subscription over Image ZMQ
         '''
         imgzmq_port = 5555
+        hostname = "/tmp/tobiiVid"; imgzmq_port = 0
         receiver = VideoStreamSubscriber(hostname, imgzmq_port)
 
         '''
@@ -81,6 +88,8 @@ if __name__ == '__main__':
             # get from py3
             sent_msg_string, frame = receiver.receive()
             image = cv2.imdecode(np.frombuffer(frame, dtype='uint8'), -1)
+            image = np.frombuffer(frame, dtype='uint8')
+            image = image.reshape(1080, 1920, 3)
             print(image.shape, sent_msg_string)
             # Parse sent message to convert to ros formats
             frametime, counter = parse_sent_msg(sent_msg_string)
